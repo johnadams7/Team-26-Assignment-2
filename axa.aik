@@ -1,0 +1,53 @@
+;	Opcode is top 6 bits
+;	Bit 15 means has 8-bit immediate (bottom 2 bits of opcode gone)
+;	Bit 14 means is non-reversible (pushes)
+
+.op				:=	.this:6 0:10
+.alias	.op	0x10 land 0x00 sys com
+
+.dsrc	$.d, $.s		:=      .this:6 0:2	.s:4	.d:4
+.dsrc	$.d, .i4        	:=      .this:6 1:2     .i4:4	.d:4
+.dsrc	$.d, @$.s		:=      .this:6 2:2     .s:4    .d:4
+.dsrc	$.d, .i4$       	:=      .this:6 3:2     .i4:4   .d:4
+.alias	.dsrc	0x02 add sub xor ex rol 0x08 bz bnz bn bnn 0x08 jz jnz jn jnn 0x0e jerr 0x11 shr or and dup
+
+fail	.i4	        	:=      0x0f:6 1:2     .i4:4	0:4
+
+.di8	$.d, .i8        	:=	.this>>2:4      .i8:8   .d:4
+.alias	.di8	0x20 xhi 0x28 xlo 0x30 lhi 0x38 llo
+
+
+.const {r0	r1	r2	r3	r4	r5	r6	r7
+	r8	r9	r10	r11	rt	fp	sp	rv }
+
+.segment .text   16      0x10000 0       .VMEM
+.segment .data   16      0x10000 0       .VMEM
+
+;	Synthesized instructions
+
+l16	$.d, .i ?(!(.i&0xff))	:=	lhi>>2:4	(.i>>8):8	.d:4
+l16	$.d, .i ?(((.i&0xff80)==0xff80) || ((.i&0xff80)==0x0000)) {
+				:=	llo>>2:4	.i:8		.d:4 }
+l16	$.d, .i			:=	lhi>>2:4	(.i>>8):8	.d:4 {
+					xlo>>2:4	.i:8		.d:4 }
+
+.j16	$.d, .i ?((.i>=(.-8)) && (.i<=(.+7))) {
+				:=	.this	1:2	(.i-.):4	.d:4 }
+.j16	$.d, .i ?(!(.i&0xff))	:=	lhi>>2:4	(.i>>8):8	rt:4 {
+					.this:6	0:2	rt:4		.d:4 }
+.j16	$.d, .i ?(((.i&0xff80)==0xff80) || ((.i&0xff80)==0x0000)) {
+				:=	llo>>2:4	.i:8		rt:4
+					.this:6	0:2	rt:4		.d:4 }
+.j16	$.d, .i			:=	lhi>>2:4	(.i>>8):8	rt:4 {
+					xlo>>2:4	.i:8		rt:4
+					.this:6	0:2	rt:4		.d:4 }
+.alias	.j16	0x08 jz16 jnz16 jn16 jnn16
+
+j16	.i ?(!(.i&0xff))	:=	lhi>>2:4	(.i>>8):8	rt:4 {
+					jnz:6	0:2	rt:4		rt:4 }
+j16	.i ?(((.i&0xff80)==0xff80) || ((.i&0xff80)==0x0000)) {
+				:=	llo>>2:4	.i:8		rt:4
+					jnz:6	0:2	rt:4		rt:4 }
+j16	.i			:=	lhi>>2:4	(.i>>8):8	rt:4 {
+					xlo>>2:4	.i:8		rt:4
+					jnz:6	0:2	rt:4		rt:4 }
