@@ -14,6 +14,8 @@ Alex:
 David:
   Dup, exchange
   ALU testing
+  Halt testing
+  Processor flow
 
 Peter:
   Xlo, etc testing
