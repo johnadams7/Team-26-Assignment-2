@@ -1,0 +1,4 @@
+.text
+start:
+        land
+        fail 0x00
