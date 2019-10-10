@@ -13,7 +13,7 @@
 `define SRC8		[11:4]
 `define STATE		[6:0]
 `define REGS		[15:0]
-`define OPERATION_BITS 	[5:0]
+`define OPERATION_BITS 	[6:0]
 `define REGSIZE		[15:0]
 
 //Op values
@@ -35,7 +35,7 @@
 `define OPor					6'b010010
 `define OPand					6'b010011
 `define OPdup					6'b010100
-// 8-bit immediate 
+// 8-bit immediate
 `define OPxhi					4'b1000
 `define OPxlo					4'b1010
 `define OPlhi					4'b1100
@@ -52,6 +52,8 @@
 `define SrcI4					7'b1001010
 `define SrcI8 					7'b1001011
 `define SrcMem					7'b1001100
+`define OPex2					7'b1010000
+`define OPex3					7'b1010001
 `define Done					6'b111101
 
 module ALU(out, in1, in2, op);
@@ -83,22 +85,19 @@ reg `DATA pc = 0;
 reg `INSTRUCTION ir;
 reg `STATE s, sLA;
 reg `DATA passreg;
+wire `DATA aluout;
+
+//Module instantiations
+ALU opalu(aluout, reglist[ir `DESTREG], passreg, s);
 
 always @(reset) begin
 	halt <= 0;
 	pc <= 0;
 	s <= `Start;
 //Setting initial values
-	
-	$readmemh0(reglist); //Registers
+        $readmemh0(reglist); //Registers
 	$readmemh1(datamem); //Data
 	$readmemh2(instrmem); //Instructions
-	
-        /*
-	$readmemh( "vmem0.txt" ,reglist);
-       	$readmemh( "vmem1.txt" ,datamem);
-       	$readmemh( "vmem2.txt", instrmem);
-	*/
 end
 
 always @(posedge clk) begin
@@ -115,11 +114,11 @@ always @(posedge clk) begin
 			else
 				s <= `Decode2;
 
-			pc <= pc + 1; 
+			pc <= pc + 1;
 			end
-	
-		
-		// Regular Instruction	
+
+
+		// Regular Instruction
 		`Decode2: begin
 			// Grab the next state
 			case (ir `OP)
@@ -128,6 +127,7 @@ always @(posedge clk) begin
 				`OPjerr: s <= `Nop;
 				`OPfail: s <= `Done;
 				`OPsys: s <= `Done;
+				`OPex: begin reglist[12] <= reglist[ir `DESTREG]; s <= `OPex2; end
 				default case (ir `SRCTYPE)
 					`SrcRegister: s <= `SrcRegister;
 					`SrcI4:  s <= `SrcI4;
@@ -151,12 +151,12 @@ always @(posedge clk) begin
 					default: halt <= 1;
 				endcase
 			end
-			
+
 			s <= `SrcI8;
 			end
-		
+
 		// Begin Src States
-		
+
 		`SrcRegister: begin
 			passreg <= reglist[ir `SRCREG];
 			s <= sLA;
@@ -175,11 +175,13 @@ always @(posedge clk) begin
 			passreg <= datamem[reglist[ir `SRCREG]];
 			s <= sLA;
 			end
-		
-			
+
+
 		// Begin OPCODE States
-		
+
 		`Nop: s <= `Start;
+    `OPex2: begin reglist[ir `DESTREG] <= datamem[reglist[ir `SRCREG]]; s <= `OPex3; end
+    `OPex3: begin datamem[reglist[ir `SRCREG]] <= reglist[12]; s <= `Done; end
 
 		default: begin
 			halt <= 1;
@@ -197,7 +199,6 @@ wire halt;
 processor PE(halt, reset, clk);
 
 initial begin
-	//$dumpfile("test.out");
 	$dumpfile;
 	$dumpvars(0, PE);
 	#10 reset = 1;
