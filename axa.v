@@ -88,10 +88,11 @@ reg `INSTRUCTION instrmem `SIZE;
 reg `DATA pc = 0;
 reg `INSTRUCTION ir;
 reg `STATE s, sLA;
-reg `DATA destreg, passreg;
+reg `DATA passreg;
 wire `DATA aluout;
 
-ALU opalu(aluout, destreg, passreg, sLA);
+//Module instantiations
+ALU opalu(aluout, reglist[ir `DESTREG], passreg, s);
 
 always @(reset) begin
 	halt <= 0;
@@ -181,6 +182,11 @@ always @(posedge clk) begin
 
 
 		// Begin OPCODE States
+
+
+		`Nop: s <= `Start;
+    `OPex2: begin reglist[ir `DESTREG] <= datamem[reglist[ir `SRCREG]]; s <= `OPex3; end
+    `OPex3: begin datamem[reglist[ir `SRCREG]] <= reglist[12]; s <= `Done; end
 		
 		`OPxlo: begin reglist[ir `DESTREG] <= aluout; destreg <= reglist[ir `DESTREG]; passreg <= ; sLa <= `OPxor; end
 		`OPxhi: begin reglist[ir `DESTREG] <= aluout; destreg <= reglist[ir `DESTREG]; passreg <= {reglist[ir `IMM8] ,8'b0}; sLA <= `OPxor; end
