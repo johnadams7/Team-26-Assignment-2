@@ -149,7 +149,7 @@ always @(posedge clk) begin
 				`OPjerr: s <= `Nop;
 				`OPfail: s <= `Done;
 				`OPsys: s <= `Done;
-				
+
 				default case (ir `SRCTYPE)
 					`SrcTypeRegister: s <= `SrcRegister;
 					`SrcTypeI4:  s <= `SrcI4;
@@ -201,11 +201,6 @@ always @(posedge clk) begin
 
 		// Begin OPCODE States
 
-
-		`Nop: s <= `Start;
-    //`OPex2: begin reglist[ir `DESTREG] <= datamem[reglist[ir `SRCREG]]; s <= `OPex3; end
-    //`OPex3: begin datamem[reglist[ir `SRCREG]] <= reglist[12]; s <= `Done; end
-		
     	`OPxlo: begin reglist[ir  `DESTREG] <= reglist[ir `DESTREG]; s <= `OPxor; end
 		`OPxhi: begin reglist[12] <= passreg << 8; s <= `OPxhi2; end
 		`OPxhi2: begin passreg <= reglist[12]; s <= `OPxor; end
@@ -230,8 +225,8 @@ always @(posedge clk) begin
 			begin
 				pc <= passreg;
 			end
-			s<= `Start; 
-			
+			s<= `Start;
+
 		end
 		end
 
@@ -245,11 +240,11 @@ always @(posedge clk) begin
 			begin
 				pc <= passreg;
 			end
-			s<= `Start; 
-			
+			s<= `Start;
+
 		end
 		end
-		 		
+
 		`OPbnjn: begin if(reglist[ir `DESTREG]<0)
 		begin
 			if(ir `SRCTYPE == 2'b01)
@@ -260,8 +255,8 @@ always @(posedge clk) begin
 			begin
 				pc <= passreg;
 			end
-			s<= `Start; 
-			
+			s<= `Start;
+
 		end
 		end
 
@@ -275,12 +270,13 @@ always @(posedge clk) begin
 			begin
 				pc <= passreg;
 			end
-			s<= `Start; 
-			
+			s<= `Start;
+
 		end
 		end
-	
+
 		`Nop: s <= `Start;
+		`OPdup: begin reglist[ir `DESTREG] <= passreg; s <= `Start; end
 		`OPex: begin reglist[12] <= reglist[ir `DESTREG]; s <= `OPex2; end
 		`OPex2: begin reglist[ir `DESTREG] <= datamem[reglist[ir `SRCREG]]; s <= `OPex3; end
 		`OPex3: begin datamem[reglist[ir `SRCREG]] <= reglist[12]; s <= `Start; end
