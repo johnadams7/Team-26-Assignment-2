@@ -134,11 +134,11 @@ always @(posedge clk) begin
 				`OPjerr: s <= `Nop;
 				`OPfail: s <= `Done;
 				`OPsys: s <= `Done;
-				`OPex: begin reglist[12] <= reglist[ir `DESTREG]; s <= `OPex2; end
+				
 				default case (ir `SRCTYPE)
-					`SrcRegister: s <= `SrcRegister;
-					`SrcI4:  s <= `SrcI4;
-					`SrcMem: s <= `SrcMem;
+					2'b00: s <= `SrcRegister;
+					2'b01:  s <= `SrcI4;
+					2'b10: s <= `SrcMem;
 					default: s <= `Start;
 				endcase
 			endcase
@@ -207,6 +207,7 @@ always @(posedge clk) begin
 		`OPshr: begin reglist[ir `DESTREG] <= aluout; end s <= Start
 	
 		`Nop: s <= `Start;
+		`OPex: begin reglist[12] <= reglist[ir `DESTREG]; s <= `OPex2; end
 		`OPex2: begin reglist[ir `DESTREG] <= datamem[reglist[ir `SRCREG]]; s <= `OPex3; end
 		`OPex3: begin datamem[reglist[ir `SRCREG]] <= reglist[12]; s <= `Start; end
 		default: begin
