@@ -10,7 +10,9 @@
 `define SRCTYPE		[9:8]
 `define DESTREG		[3:0]
 `define SRCREG		[7:4]
+`define SRCREGMSB 	[7]
 `define SRC8		[11:4]
+`define SRC8MSB 	[11]
 `define STATE		[6:0]
 `define REGS		[15:0]
 `define OPERATION_BITS 	[6:0]
@@ -162,11 +164,11 @@ always @(posedge clk) begin
 			end
 
 		`SrcI4: begin
-			passreg <= ir `SRCREG;
+			passreg <= {{12{ir `SRCREGMSB}}, ir `SRCREG};
 			s <= sLA;
 			end
 		`SrcI8: begin
-			passreg <= ir `SRC8;
+			passreg <=  {{8{ir `SRC8MSB}}, ir `SRC8};
 			s <= sLA;
 			end
 		`SrcMem: begin
