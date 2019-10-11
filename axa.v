@@ -10,7 +10,9 @@
 `define SRCTYPE		[9:8]
 `define DESTREG		[3:0]
 `define SRCREG		[7:4]
+`define SRCREGMSB 	[7]
 `define SRC8		[11:4]
+`define SRC8MSB 	[11]
 `define STATE		[6:0]
 `define REGS		[15:0]
 `define OPERATION_BITS 	[6:0]
@@ -55,10 +57,13 @@
 `define OPex2					7'b1010000
 `define OPex3					7'b1010001
 `define Done					6'b111101
+`define ALUOUT					7'b1010010
+`define OPxhi2					7'b1011000
+`define OPxhi3					7'b1011001
 
 module ALU(out, in1, in2, op);
 parameter BITS = 16;
-output [BITS-1:0] out;
+output reg [BITS-1:0] out;
 input `REGSIZE in1, in2;
 input `OPERATION_BITS op;
 reg `REGSIZE a;
@@ -70,8 +75,8 @@ always @(in1 or in2 or op) begin #1
 		`OPxor: begin a <= in1 ^ in2; end
 		`OProl: begin a <= {in1 << in2, in1 >> (BITS - in2)}; end
 		`OPshr: begin a <= in1 >> in2; end
-		`OPor:  begin a <= in1 | in2; end
-		`OPand: begin a <= in1 & in2; end
+		`OPor:  begin a <= in1 || in2; end
+		`OPand: begin a <= in1 && in2; end
         endcase
 	out = a;
 end
@@ -167,11 +172,11 @@ always @(posedge clk) begin
 			end
 
 		`SrcI4: begin
-			passreg <= ir `SRCREG;
+			passreg <= {{12{ir `SRCREGMSB}}, ir `SRCREG};
 			s <= sLA;
 			end
 		`SrcI8: begin
-			passreg <= ir `SRC8;
+			passreg <=  {{8{ir `SRC8MSB}}, ir `SRC8};
 			s <= sLA;
 			end
 		`SrcMem: begin
@@ -185,22 +190,24 @@ always @(posedge clk) begin
 
 
 		`Nop: s <= `Start;
-    	`OPex2: begin reglist[ir `DESTREG] <= datamem[reglist[ir `SRCREG]]; s <= `OPex3; end
-    	`OPex3: begin datamem[reglist[ir `SRCREG]] <= reglist[12]; s <= `Done; end
+    `OPex2: begin reglist[ir `DESTREG] <= datamem[reglist[ir `SRCREG]]; s <= `OPex3; end
+    `OPex3: begin datamem[reglist[ir `SRCREG]] <= reglist[12]; s <= `Done; end
 		
-		`OPxlo: begin reglist[ir `DESTREG] <= aluout; destreg <= reglist[ir `DESTREG]; passreg <= ; sLa <= `OPxor; end
-		`OPxhi: begin reglist[ir `DESTREG] <= aluout; destreg <= reglist[ir `DESTREG]; passreg <= {reglist[ir `IMM8] ,8'b0}; sLA <= `OPxor; end
-	//	`OPllo: begin reglist[ir `DESTREG] <= {8{reglist[ir `IMM8][7]}, reglist[ir `IMM8]}; end
-		`OPlhi: begin reglist[ir `DESTREG] <= {reglist[ir `IMM8], 8'b0}; end;
-		`OPand: begin reglist[ir `DESTREG] <= aluout; end
-		`OPor:	begin reglist[ir `DESTREG] <= aluout; end
-		`OPxor: begin reglist[ir `DESTREG] <= aluout; end
-		`OPadd: begin reglist[ir `DESTREG] <= aluout; end
-		`OPsub: begin reglist[ir `DESTREG] <= aluout; end
-		`OProl: begin reglist[ir `DESTREG] <= aluout; end
-		`OPshr: begin reglist[ir `DESTREG] <= aluout; end
-
-		`OPbzjz: begin if(reglist[ir `DESTREG]==0)
+    	`OPxlo: begin reglist[ir  `DESTREG] <= reglist[ir `DESTREG]; s <= `OPxor; end
+		`OPxhi: begin reglist[12] <= passreg << 8; s <= `OPxhi2; end
+		`OPxhi2: begin passreg <= reglist[12]; s <= `OPxor; end
+		//`OPxhi3: begin  <= reglist[ir `DESTREG]; s <= `OPxor; end
+		//`ALUOUT: begin reglist[ir `DESTREG] <= aluout; s <= `Start; end
+		`OPllo: begin reglist[ir `DESTREG] <= {{8{reglist[ir `SRC8][7]}}, reglist[ir `SRC8]}; s <=`Start; end
+		`OPlhi: begin reglist[ir `DESTREG] <= {reglist[ir `SRC8], 8'b0}; s <=`Start; end
+		`OPand: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
+		`OPor:	begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
+		`OPxor: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
+		`OPadd: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
+		`OPsub: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
+		`OProl: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
+		`OPshr: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
+	`OPbzjz: begin if(reglist[ir `DESTREG]==0)
 		begin
 			if(ir `SRCTYPE == 2'b01)
 			begin
@@ -265,6 +272,7 @@ always @(posedge clk) begin
 		`OPex2: begin reglist[ir `DESTREG] <= datamem[reglist[ir `SRCREG]]; s <= `OPex3; end
 		`OPex3: begin datamem[reglist[ir `SRCREG]] <= reglist[12]; s <= `Start; end
 		default: begin
+
 			halt <= 1;
 			end
 		endcase
