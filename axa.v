@@ -68,8 +68,12 @@ always @(in1 or in2 or op) begin #1
 		`OPadd: begin a <= in1 + in2; end
 		`OPsub: begin a <= in1 - in2; end
 		`OPxor: begin a <= in1 ^ in2; end
-		`OProl: begin	a <= {in1 << in2, in1 >> (BITS - in2)}; end
+		`OProl: begin a <= {in1 << in2, in1 >> (BITS - in2)}; end
+		`OPshr: begin a <= in1 >> in2; end
+		`OPor:  begin a <= in1 | in2; end
+		`OPand: begin a <= in1 & in2; end
         endcase
+	out = a;
 end
 
 endmodule
@@ -177,7 +181,19 @@ always @(posedge clk) begin
 
 
 		// Begin OPCODE States
-
+		
+		`OPxlo: begin reglist[ir `DESTREG] <= aluout; destreg <= reglist[ir `DESTREG]; passreg <= ; sLa <= `OPxor; end
+		`OPxhi: begin reglist[ir `DESTREG] <= aluout; destreg <= reglist[ir `DESTREG]; passreg <= {reglist[ir `IMM8] ,8'b0}; sLA <= `OPxor; end
+		`OPllo: begin reglist[ir `DESTREG] <= {8{reglist[ir `IMM8][7]}, reglist[ir `IMM8]}; end
+		`OPlhi: begin reglist[ir `DESTREG] <= {reglist[ir `IMM8], 8'b0}; end;
+		`OPand: begin reglist[ir `DESTREG] <= aluout; end
+		`OPor:	begin reglist[`ir DESTREG] <= aluout; end
+		`OPxor: begin reglist[ir `DESTREG] <= aluout; end
+		`OPadd: begin reglist[ir `DESTREG] <= aluout; end
+		`OPsub: begin reglist[ir `DESTREG] <= aluout; end
+		`OProl: begin reglist[ir `DESTREG] <= aluout; end
+		`OPshr: begin reglist[ir `DESTREG] <= aluout; end
+	
 		`Nop: s <= `Start;
 		`OPex2: begin reglist[ir `DESTREG] <= datamem[reglist[ir `SRCREG]]; s <= `OPex3; end
 		`OPex3: begin datamem[reglist[ir `SRCREG]] <= reglist[12]; s <= `Start; end
