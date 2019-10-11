@@ -37,11 +37,24 @@
 `define OPor					6'b010010
 `define OPand					6'b010011
 `define OPdup					6'b010100
-// 8-bit immediate
-`define OPxhi					4'b1000
-`define OPxlo					4'b1010
-`define OPlhi					4'b1100
-`define OPllo					4'b1110
+`define OPxhi					6'b100000
+`define OPxlo					6'b101000
+`define OPlhi					6'b110000
+`define OPllo					6'b111000
+
+
+
+// Checks
+// 	8-bit
+`define OPxhiCheck				4'b1000
+`define OPxloCheck				4'b1010
+`define OPlhiCheck				4'b1100
+`define OPlloCheck				4'b1110
+
+//	SrcType
+`define SrcTypeRegister				2'b00
+`define SrcTypeI4				2'b01
+`define SrcTypeMem				2'b10
 
 //State values
 `define Start					7'b1000000
@@ -138,9 +151,9 @@ always @(posedge clk) begin
 				`OPsys: s <= `Done;
 				
 				default case (ir `SRCTYPE)
-					2'b00: s <= `SrcRegister;
-					2'b01:  s <= `SrcI4;
-					2'b10: s <= `SrcMem;
+					`SrcTypeRegister: s <= `SrcRegister;
+					`SrcTypeI4:  s <= `SrcI4;
+					`SrcTypeMem: s <= `SrcMem;
 					default: s <= `Start;
 				endcase
 			endcase
@@ -153,10 +166,10 @@ always @(posedge clk) begin
 			if ( ir `OP8IMM)
 			begin
 				case (ir `OP8)
-					`OPxhi: sLA <= `OPxhi;
-					`OPxlo: sLA <= `OPxlo;
-					`OPlhi: sLA <= `OPlhi;
-					`OPllo: sLA <= `OPllo;
+					`OPxhiCheck: sLA <= `OPxhi;
+					`OPxloCheck: sLA <= `OPxlo;
+					`OPlhiCheck: sLA <= `OPlhi;
+					`OPlloCheck: sLA <= `OPllo;
 					default: halt <= 1;
 				endcase
 			end
@@ -190,8 +203,8 @@ always @(posedge clk) begin
 
 
 		`Nop: s <= `Start;
-    `OPex2: begin reglist[ir `DESTREG] <= datamem[reglist[ir `SRCREG]]; s <= `OPex3; end
-    `OPex3: begin datamem[reglist[ir `SRCREG]] <= reglist[12]; s <= `Done; end
+    //`OPex2: begin reglist[ir `DESTREG] <= datamem[reglist[ir `SRCREG]]; s <= `OPex3; end
+    //`OPex3: begin datamem[reglist[ir `SRCREG]] <= reglist[12]; s <= `Done; end
 		
     	`OPxlo: begin reglist[ir  `DESTREG] <= reglist[ir `DESTREG]; s <= `OPxor; end
 		`OPxhi: begin reglist[12] <= passreg << 8; s <= `OPxhi2; end
