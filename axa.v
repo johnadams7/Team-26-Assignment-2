@@ -83,15 +83,14 @@ reg `REGSIZE a;
 reg `REGSIZE temp;
 always @(in1 or in2 or op) begin #1
 	case(op)
-		`OPadd: begin a <= in1 + in2; end
-		`OPsub: begin a <= in1 - in2; end
-		`OPxor: begin a <= in1 ^ in2; end
-		`OProl: begin a <= {in1 << in2, in1 >> (BITS - in2)}; end
-		`OPshr: begin a <= in1 >> in2; end
-		`OPor:  begin a <= in1 || in2; end
-		`OPand: begin a <= in1 && in2; end
+		`OPadd: begin out <= in1 + in2; end
+		`OPsub: begin out <= in1 - in2; end
+		`OPxor: begin out <= in1 ^ in2; end
+		`OProl: begin out <= {in1 << in2, in1 >> (BITS - in2)}; end
+		`OPshr: begin out <= in1 >> in2; end
+		`OPor:  begin out <= in1 || in2; end
+		`OPand: begin out  <= in1 && in2; end
         endcase
-	out = a;
 end
 
 endmodule
@@ -110,7 +109,7 @@ reg `DATA passreg;
 wire `DATA aluout;
 
 //Module instantiations
-ALU opalu(aluout, reglist[ir `DESTREG], passreg, s);
+ALU opalu(aluout, reglist[ir `DESTREG], passreg, sLA);
 
 always @(reset) begin
 	halt <= 0;
@@ -131,6 +130,7 @@ always @(posedge clk) begin
 
 		`Decode: begin
 			// Change to if statement to combine states?
+			//$display( "%d || %b || %d", reglist[ir `DESTREG], ir, pc);
 			if (ir `OP8IMM)
 				s <= `DecodeI8;
 			else
@@ -219,15 +219,16 @@ always @(posedge clk) begin
 		begin
 			if(ir `SRCTYPE == 2'b01)
 			begin
+				
 				pc <= pc+passreg-1;
 			end
 			else
 			begin
 				pc <= passreg;
 			end
-			s<= `Start;
 
 		end
+		s <= `Start;
 		end
 
 		`OPbnzjnz: begin if(reglist[ir `DESTREG]!=0)
@@ -240,9 +241,9 @@ always @(posedge clk) begin
 			begin
 				pc <= passreg;
 			end
-			s<= `Start;
 
 		end
+		s <= `Start;
 		end
 
 		`OPbnjn: begin if(reglist[ir `DESTREG]<0)
@@ -255,9 +256,9 @@ always @(posedge clk) begin
 			begin
 				pc <= passreg;
 			end
-			s<= `Start;
 
 		end
+		s <= `Start;
 		end
 
 		`OPbnnjnn: begin if(reglist[ir `DESTREG]>=0)
@@ -270,9 +271,9 @@ always @(posedge clk) begin
 			begin
 				pc <= passreg;
 			end
-			s<= `Start;
 
 		end
+		s <= `Start;
 		end
 
 		`Nop: s <= `Start;
