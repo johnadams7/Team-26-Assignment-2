@@ -131,11 +131,11 @@ always @(posedge clk) begin
 				`OPjerr: s <= `Nop;
 				`OPfail: s <= `Done;
 				`OPsys: s <= `Done;
-				`OPex: begin reglist[12] <= reglist[ir `DESTREG]; s <= `OPex2; end
+				
 				default case (ir `SRCTYPE)
-					`SrcRegister: s <= `SrcRegister;
-					`SrcI4:  s <= `SrcI4;
-					`SrcMem: s <= `SrcMem;
+					2'b00: s <= `SrcRegister;
+					2'b01:  s <= `SrcI4;
+					2'b10: s <= `SrcMem;
 					default: s <= `Start;
 				endcase
 			endcase
@@ -193,14 +193,20 @@ always @(posedge clk) begin
 		`OPllo: begin reglist[ir `DESTREG] <= {8{reglist[ir `IMM8][7]}, reglist[ir `IMM8]}; end
 		`OPlhi: begin reglist[ir `DESTREG] <= {reglist[ir `IMM8], 8'b0}; end;
 		`OPand: begin reglist[ir `DESTREG] <= aluout; end
-		`OPor:	begin reglist[`ir DESTREG] <= aluout; end
+		`OPor:	begin reglist[ir `DESTREG] <= aluout; end
 		`OPxor: begin reglist[ir `DESTREG] <= aluout; end
 		`OPadd: begin reglist[ir `DESTREG] <= aluout; end
 		`OPsub: begin reglist[ir `DESTREG] <= aluout; end
 		`OProl: begin reglist[ir `DESTREG] <= aluout; end
 		`OPshr: begin reglist[ir `DESTREG] <= aluout; end
+
+		`OPbzjz: begin if(reglist[ir `DESTREG]==0) pc <= pc+passreg; s<= `Start; end
+		`OPbnzjnz: begin if(reglist[ir `DESTREG]!=0) pc<= pc+passreg; s<= `Start; end
+		`OPbnjn: begin if(reglist[ir `DESTREG]<0) pc<= pc+passreg; s<= `Start; end
+		`OPbnnjnn: begin if(reglist[ir `DESTREG]>=0) pc<= pc+passreg; s<= `Start; end
 	
 		`Nop: s <= `Start;
+		`OPex: begin reglist[12] <= reglist[ir `DESTREG]; s <= `OPex2; end
 		`OPex2: begin reglist[ir `DESTREG] <= datamem[reglist[ir `SRCREG]]; s <= `OPex3; end
 		`OPex3: begin datamem[reglist[ir `SRCREG]] <= reglist[12]; s <= `Start; end
 		default: begin
