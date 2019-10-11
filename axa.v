@@ -57,13 +57,13 @@
 `define OPex2					7'b1010000
 `define OPex3					7'b1010001
 `define Done					6'b111101
-`define 'ALUOUT					7'b1010010
+`define ALUOUT					7'b1010010
 `define OPxhi2					7'b1011000
 `define OPxhi3					7'b1011001
 
 module ALU(out, in1, in2, op);
 parameter BITS = 16;
-output [BITS-1:0] out;
+output reg [BITS-1:0] out;
 input `REGSIZE in1, in2;
 input `OPERATION_BITS op;
 reg `REGSIZE a;
@@ -193,20 +193,23 @@ always @(posedge clk) begin
     `OPex2: begin reglist[ir `DESTREG] <= datamem[reglist[ir `SRCREG]]; s <= `OPex3; end
     `OPex3: begin datamem[reglist[ir `SRCREG]] <= reglist[12]; s <= `Done; end
 		
-		`OPxlo: begin reglist[ir  destreg <= reglist[ir `DESTREG]; s <= `OPxor; end s <= `ALUOUT
-		`OPxhi: begin reglist[12] <= passreg << 8; end s<= 'OPxhi2
-		`OPxhi2:begin passreg <= reglist[12]; end s <= 'OPxhi3
-		`OPxhi3: begin destreg <= reglist[ir `DESTREG]; s <= `OPxor; end s<= `ALUOUT
-		`ALUOUT: begin reglist[ir `DESTREG] <= aluout; end s <= Start
-		`OPllo: begin reglist[ir `DESTREG] <= {8{reglist[ir `SRC8][7]}, reglist[ir `SRC8]}; end s <= Start
-		`OPlhi: begin reglist[ir `DESTREG] <= {reglist[ir `SRC8], 8'b0}; end s <= Start
-		`OPand: begin reglist[ir `DESTREG] <= aluout; end s <= Start
-		`OPor:	begin reglist[ir `DESTREG] <= aluout; end s <= Start
-		`OPxor: begin reglist[ir `DESTREG] <= aluout; end s <= Start
-		`OPadd: begin reglist[ir `DESTREG] <= aluout; end s <= Start
-		`OPsub: begin reglist[ir `DESTREG] <= aluout; end s <= Start
-		`OProl: begin reglist[ir `DESTREG] <= aluout; end s <= Start
-		`OPshr: begin reglist[ir `DESTREG] <= aluout; end s <= Start
+    	`OPxlo: begin reglist[ir  `DESTREG] <= reglist[ir `DESTREG]; s <= `OPxor; end
+		`OPxhi: begin 
+			reglist[12] <= passreg << 8; 
+			s <= `OPxhi2; 
+		end
+		`OPxhi2: begin passreg <= reglist[12]; s <= `OPxor; end
+		//`OPxhi3: begin  <= reglist[ir `DESTREG]; s <= `OPxor; end
+		//`ALUOUT: begin reglist[ir `DESTREG] <= aluout; s <= `Start; end
+		`OPllo: begin reglist[ir `DESTREG] <= {{8{reglist[ir `SRC8][7]}}, reglist[ir `SRC8]}; s <=`Start; end
+		`OPlhi: begin reglist[ir `DESTREG] <= {reglist[ir `SRC8], 8'b0}; s <=`Start; end
+		`OPand: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
+		`OPor:	begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
+		`OPxor: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
+		`OPadd: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
+		`OPsub: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
+		`OProl: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
+		`OPshr: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
 	
 		`Nop: s <= `Start;
 		`OPex: begin reglist[12] <= reglist[ir `DESTREG]; s <= `OPex2; end
