@@ -185,12 +185,12 @@ always @(posedge clk) begin
 
 
 		`Nop: s <= `Start;
-    `OPex2: begin reglist[ir `DESTREG] <= datamem[reglist[ir `SRCREG]]; s <= `OPex3; end
-    `OPex3: begin datamem[reglist[ir `SRCREG]] <= reglist[12]; s <= `Done; end
+    	`OPex2: begin reglist[ir `DESTREG] <= datamem[reglist[ir `SRCREG]]; s <= `OPex3; end
+    	`OPex3: begin datamem[reglist[ir `SRCREG]] <= reglist[12]; s <= `Done; end
 		
 		`OPxlo: begin reglist[ir `DESTREG] <= aluout; destreg <= reglist[ir `DESTREG]; passreg <= ; sLa <= `OPxor; end
 		`OPxhi: begin reglist[ir `DESTREG] <= aluout; destreg <= reglist[ir `DESTREG]; passreg <= {reglist[ir `IMM8] ,8'b0}; sLA <= `OPxor; end
-		`OPllo: begin reglist[ir `DESTREG] <= {8{reglist[ir `IMM8][7]}, reglist[ir `IMM8]}; end
+	//	`OPllo: begin reglist[ir `DESTREG] <= {8{reglist[ir `IMM8][7]}, reglist[ir `IMM8]}; end
 		`OPlhi: begin reglist[ir `DESTREG] <= {reglist[ir `IMM8], 8'b0}; end;
 		`OPand: begin reglist[ir `DESTREG] <= aluout; end
 		`OPor:	begin reglist[ir `DESTREG] <= aluout; end
@@ -200,10 +200,65 @@ always @(posedge clk) begin
 		`OProl: begin reglist[ir `DESTREG] <= aluout; end
 		`OPshr: begin reglist[ir `DESTREG] <= aluout; end
 
-		`OPbzjz: begin if(reglist[ir `DESTREG]==0) pc <= pc+passreg; s<= `Start; end
-		`OPbnzjnz: begin if(reglist[ir `DESTREG]!=0) pc<= pc+passreg; s<= `Start; end
-		`OPbnjn: begin if(reglist[ir `DESTREG]<0) pc<= pc+passreg; s<= `Start; end
-		`OPbnnjnn: begin if(reglist[ir `DESTREG]>=0) pc<= pc+passreg; s<= `Start; end
+		`OPbzjz: begin if(reglist[ir `DESTREG]==0)
+		begin
+			if(ir `SRCTYPE == 2'b01)
+			begin
+				pc <= pc+passreg-1;
+			end
+			else
+			begin
+				pc <= passreg;
+			end
+			s<= `Start; 
+			
+		end
+		end
+
+		`OPbnzjnz: begin if(reglist[ir `DESTREG]!=0)
+		begin
+			if(ir `SRCTYPE == 2'b01)
+			begin
+				pc <= pc+passreg-1;
+			end
+			else
+			begin
+				pc <= passreg;
+			end
+			s<= `Start; 
+			
+		end
+		end
+		 		
+		`OPbnjn: begin if(reglist[ir `DESTREG]<0)
+		begin
+			if(ir `SRCTYPE == 2'b01)
+			begin
+				pc <= pc+passreg-1;
+			end
+			else
+			begin
+				pc <= passreg;
+			end
+			s<= `Start; 
+			
+		end
+		end
+
+		`OPbnnjnn: begin if(reglist[ir `DESTREG]>=0)
+		begin
+			if(ir `SRCTYPE == 2'b01)
+			begin
+				pc <= pc+passreg-1;
+			end
+			else
+			begin
+				pc <= passreg;
+			end
+			s<= `Start; 
+			
+		end
+		end
 	
 		`Nop: s <= `Start;
 		`OPex: begin reglist[12] <= reglist[ir `DESTREG]; s <= `OPex2; end
