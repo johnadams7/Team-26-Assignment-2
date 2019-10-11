@@ -1,6 +1,0 @@
-# Verilog executable
-*.out
-# Prevent clutter of updating tests
-vmem*.*
-# Vim swap files
-*.swp
