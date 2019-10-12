@@ -88,8 +88,8 @@ always @(in1 or in2 or op) begin #1
 		`OPxor: begin out <= in1 ^ in2; end
 		`OProl: begin out <= {in1 << in2, in1 >> (BITS - in2)}; end
 		`OPshr: begin out <= in1 >> in2; end
-		`OPor:  begin out <= in1 || in2; end
-		`OPand: begin out  <= in1 && in2; end
+		`OPor:  begin out <= in1 | in2; end
+		`OPand: begin out <= in1 & in2; end
         endcase
 end
 
@@ -206,8 +206,8 @@ always @(posedge clk) begin
 		`OPxhi2: begin passreg <= reglist[12]; s <= `OPxor; end
 		//`OPxhi3: begin  <= reglist[ir `DESTREG]; s <= `OPxor; end
 		//`ALUOUT: begin reglist[ir `DESTREG] <= aluout; s <= `Start; end
-		`OPllo: begin reglist[ir `DESTREG] <= {{8{reglist[ir `SRC8][7]}}, reglist[ir `SRC8]}; s <=`Start; end
-		`OPlhi: begin reglist[ir `DESTREG] <= {reglist[ir `SRC8], 8'b0}; s <=`Start; end
+		`OPllo: begin reglist[ir `DESTREG] <= {{8{passreg[7]}}, passreg}; s <=`Start; end
+		`OPlhi: begin reglist[ir `DESTREG] <= {passreg, 8'b0}; s <=`Start; end
 		`OPand: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
 		`OPor:	begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
 		`OPxor: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
@@ -219,7 +219,7 @@ always @(posedge clk) begin
 		begin
 			if(ir `SRCTYPE == 2'b01)
 			begin
-				
+
 				pc <= pc+passreg-1;
 			end
 			else
@@ -246,7 +246,7 @@ always @(posedge clk) begin
 		s <= `Start;
 		end
 
-		`OPbnjn: begin if(reglist[ir `DESTREG]<0)
+		`OPbnjn: begin if(reglist[ir `DESTREG][15]==1)
 		begin
 			if(ir `SRCTYPE == 2'b01)
 			begin
@@ -261,7 +261,7 @@ always @(posedge clk) begin
 		s <= `Start;
 		end
 
-		`OPbnnjnn: begin if(reglist[ir `DESTREG]>=0)
+		`OPbnnjnn: if(reglist[ir `DESTREG]>=0)
 		begin
 			if(ir `SRCTYPE == 2'b01)
 			begin

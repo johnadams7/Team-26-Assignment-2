@@ -1,0 +1,36 @@
+l16 $0, 0x0001
+sub $0, 1
+bz $0, continue0-.
+fail 0b1111
+continue0: land
+add $0, 7
+add $0, 1
+l16 $1, 0x8000
+xor $0, $1
+bn $0, continue1-.
+fail 0b1111
+continue1: or $2, $0
+shr $2, 7
+shr $2, 7
+com
+bnn $2, continue2-.
+fail 0b1111
+continue2: rol $0, @$2 ; set datamem[2] to 0x0010. Can't get past this without fixing it
+bnz $0, continue3-.
+fail 0b1111
+continue3: dup $3, @$2
+ex $4, @$2
+sub $4, $3
+l16 $5, 0x001a
+jz $4, $5
+fail 0b1111
+continue4: shr $3, 1
+ex $3, @$7
+shr $0, @$7
+rol $1, @$7
+and $1, $0
+l16 $6, 0x0008
+jnz $1, @$6 ; set datamem[8] to 0x0022
+fail 0b1111
+continue5: jerr $1, 0b0101
+sys
