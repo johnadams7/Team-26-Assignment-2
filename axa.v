@@ -261,7 +261,7 @@ always @(posedge clk) begin
 		s <= `Start;
 		end
 
-		`OPbnnjnn: begin if(reglist[ir `DESTREG]>=0)
+		`OPbnnjnn: begin if(reglist[ir `DESTREG][15]==0)
 		begin
 			if(ir `SRCTYPE == 2'b01)
 			begin
