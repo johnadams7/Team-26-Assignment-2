@@ -17,6 +17,7 @@
 `define REGS		[15:0]
 `define OPERATION_BITS 	[6:0]
 `define REGSIZE		[15:0]
+`define RT		12
 
 //Op values
 `define OPsys					6'b000000
@@ -73,6 +74,8 @@
 `define ALUOUT					7'b1010010
 `define OPxhi2					7'b1011000
 `define OPxhi3					7'b1011001
+`define OProl2					7'b1011100
+`define OProl3                                  7'b1011101
 
 module ALU(out, in1, in2, op);
 parameter BITS = 16;
@@ -86,7 +89,6 @@ always @(in1 or in2 or op) begin #1
 		`OPadd: begin out <= in1 + in2; end
 		`OPsub: begin out <= in1 - in2; end
 		`OPxor: begin out <= in1 ^ in2; end
-		`OProl: begin out <= {in1 << in2, in1 >> (BITS - in2)}; end
 		`OPshr: begin out <= in1 >> in2; end
 		`OPor:  begin out <= in1 | in2; end
 		`OPand: begin out <= in1 & in2; end
@@ -148,7 +150,7 @@ always @(posedge clk) begin
 				`OPcom: s <= `Nop;
 				`OPjerr: s <= `Nop;
 				`OPfail: s <= `Done;
-				`OPsys: s <= `Done;
+				`OPsys: begin s <= `Done; end
 
 				default case (ir `SRCTYPE)
 					`SrcTypeRegister: s <= `SrcRegister;
@@ -213,7 +215,9 @@ always @(posedge clk) begin
 		`OPxor: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
 		`OPadd: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
 		`OPsub: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
-		`OProl: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
+		`OProl: begin reglist[`RT] <= reglist[ir `DESTREG] << passreg; s <=`OProl2; end
+		`OProl2: begin reglist[ir `DESTREG] <= reglist[ir `DESTREG] >> (16 - passreg); s <= `OProl3; end
+                `OProl3: begin passreg <= reglist[`RT]; s <= `OPor; sLA <= `OPor; end
 		`OPshr: begin reglist[ir `DESTREG] <= aluout; s <=`Start; end
 	`OPbzjz: begin if(reglist[ir `DESTREG]==0)
 		begin
