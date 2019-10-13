@@ -150,7 +150,7 @@ always @(posedge clk) begin
 				`OPcom: s <= `Nop;
 				`OPjerr: s <= `Nop;
 				`OPfail: s <= `Done;
-				`OPsys: begin s <= `Done; end
+				`OPsys: s <= `Done;
 
 				default case (ir `SRCTYPE)
 					`SrcTypeRegister: s <= `SrcRegister;
@@ -203,9 +203,9 @@ always @(posedge clk) begin
 
 		// Begin OPCODE States
 
-    	`OPxlo: begin reglist[ir  `DESTREG] <= reglist[ir `DESTREG]; s <= `OPxor; end
+    	        `OPxlo: begin s <= `OPxor; sLA <= `OPxor; end
 		`OPxhi: begin reglist[12] <= passreg << 8; s <= `OPxhi2; end
-		`OPxhi2: begin passreg <= reglist[12]; s <= `OPxor; end
+		`OPxhi2: begin passreg <= reglist[12]; s <= `OPxor; sLA <= `OPxor; end
 		//`OPxhi3: begin  <= reglist[ir `DESTREG]; s <= `OPxor; end
 		//`ALUOUT: begin reglist[ir `DESTREG] <= aluout; s <= `Start; end
 		`OPllo: begin reglist[ir `DESTREG] <= {{8{passreg[7]}}, passreg}; s <=`Start; end
